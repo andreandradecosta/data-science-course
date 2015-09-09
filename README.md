@@ -1,2 +1,2 @@
-# data-science-course
-Repo for the Data Science Courses of CourseEra
+# CourseEra Data Science Courses
+## 1. Toolbox
