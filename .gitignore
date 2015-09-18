@@ -1,2 +1,4 @@
 .R*
 specdata
+*.csv
+*.pdf
