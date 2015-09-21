@@ -1,2 +1,2 @@
 library("testthat")
-test_dir(".", reporter = "summary")
+test_dir(".", reporter = "tap")
