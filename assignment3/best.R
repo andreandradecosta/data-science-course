@@ -1,16 +1,12 @@
+source("colForOutcome.R")
+source("readOutcomeData.R")
+
 best <- function(state, outcome) {
-    outcomeData <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-    col <- 0
-    if (outcome == "heart attack") {
-        col <- 11
-    } else if (outcome == "heart failure") {
-        col <- 17
-    } else if (outcome == "pneumonia") {
-        col <- 23
-    } else {
-        stop("invalid outcome")
+    col <- colForOutcome(outcome)
+    if (col == 0) {
+      stop("invalid outcome")
     }
-    outcomeData <- outcomeData[outcomeData$State == state, ]
+    outcomeData <- readOutcomeData(state)
     if (nrow(outcomeData) == 0) {
         stop("invalid state")
     }
