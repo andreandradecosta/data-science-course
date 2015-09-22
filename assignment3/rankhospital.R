@@ -1,15 +1,7 @@
 source("colForOutcome.R")
 source("readOutcomeData.R")
+source("pos.R")
 
-pos <- function(data, num) {
-  if (num == "best") {
-    num = 1
-  }
-  if (num == "worst") {
-    num = length(data)
-  }
-  data[num]
-}
 
 rankhospital <- function(state, outcome, num = "best") {
   col <- colForOutcome(outcome)
