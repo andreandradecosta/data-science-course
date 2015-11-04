@@ -6,3 +6,5 @@ specdata
 /keyrings/live/pubring.kbx~
 /keyrings/live/secring.gpg
 /foo.txt
+*.xlsx
+*.xml
