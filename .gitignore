@@ -10,3 +10,4 @@ specdata
 *.xml
 *.for
 *.rds
+data/
