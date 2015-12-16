@@ -1,0 +1,21 @@
+library(data.table)
+library(dplyr)
+
+# Cleaning the workspace
+rm(list = ls())
+NEI <- readRDS("data/summarySCC_PM25.rds")
+SCC <- readRDS("data/Source_Classification_Code.rds")
+
+
+byYear <- NEI %>%
+        group_by(year) %>%
+        summarise(total = sum(Emissions))
+regression <- lm(total ~ year, byYear)
+
+png(filename = "plot1.png")
+
+plot(byYear, main = "US Total Emissions by Year", xlab = "Year", ylab = "Emissions", pch = 19, col = "blue")
+abline(regression, lwd = 1)
+
+
+dev.off()
