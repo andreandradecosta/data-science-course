@@ -4,8 +4,6 @@ library(dplyr)
 # Cleaning the workspace
 rm(list = ls())
 NEI <- readRDS("data/summarySCC_PM25.rds")
-SCC <- readRDS("data/Source_Classification_Code.rds")
-
 
 byYear <- NEI %>%
         group_by(year) %>%
