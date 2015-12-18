@@ -13,8 +13,6 @@ regression <- lm(total ~ year, byYear)
 
 png(filename = "plot2.png")
 
-plot(byYear, main = "Baltimore City Total Emissions by Year", xlab = "Year", ylab = "Emissions", pch = 19, col = "blue")
-abline(regression, lwd = 1)
-
+plot(byYear, main = "Baltimore City Total Emissions by Year", xlab = "Year", ylab = "Emissions", type = "l", col = "blue")
 
 dev.off()
