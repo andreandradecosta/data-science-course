@@ -11,3 +11,4 @@ specdata
 *.for
 *.rds
 data/
+.DS_Store
