@@ -12,3 +12,4 @@ specdata
 *.rds
 data/
 .DS_Store
+*cache
