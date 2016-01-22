@@ -27,6 +27,7 @@ For this study the following  R packages are used:
 ```{r librarys, message=FALSE, warning=FALSE}
 library(dplyr)
 library(ggplot2)
+library(stringdist)
 ```
 
 
@@ -45,10 +46,75 @@ if (!dir.exists("data")) {
 data <- read.csv(bzfile("data/rawdata.csv.bz2"))
 ```
 
-Records:
 
-```{r process}
+Size of data:
+```{r}
 dim(data)
+```
+
+
+Distinct event types in data set:
+```{r}
+length(unique(data$EVTYPE))
+```
+
+Top 50 events:
+```{r}
+byEvents <- data %>%
+    group_by(EVTYPE) %>%
+    summarise(count = n()) %>%
+    arrange(desc(count))
+head(as.data.frame(byEvents), 50)
+```
+
+
+Official events:
+```{r}
+events <- toupper(as.character(read.csv("event_types.txt", header = F)[,]))
+events <- c(events, "OTHER")
+print(events)
+```
+
+
+Classify events:
+```{r}
+
+data <- data %>% 
+    mutate(EVTYPE = gsub("TSTM", "THUNDERSTORM", toupper(EVTYPE)),
+           EVENTCLASS = events[amatch(EVTYPE, events, maxDist = 20, nomatch = 49)])
+
+```
+
+
+Events after classification:
+
+```{r}
+byEvents <- data %>%
+    group_by(EVENTCLASS) %>%
+    summarise(count = n()) %>%
+    arrange(desc(count))
+as.data.frame(byEvents)
+```
+
+Calculate damages
+```{r}
+
+data$PROPDMG_VAL = 0
+data[toupper(data$PROPDMGEXP) == "H",]$PROPDMG_VAL = data[toupper(data$PROPDMGEXP) == "H",]$PROPDMG * 100
+data[toupper(data$PROPDMGEXP) == "K",]$PROPDMG_VAL = data[toupper(data$PROPDMGEXP) == "K",]$PROPDMG * 1000
+data[toupper(data$PROPDMGEXP) == "M",]$PROPDMG_VAL = data[toupper(data$PROPDMGEXP) == "M",]$PROPDMG * 1000000
+data[toupper(data$PROPDMGEXP) == "B",]$PROPDMG_VAL = data[toupper(data$PROPDMGEXP) == "B",]$PROPDMG * 1000000000
+
+data$CROPDMG_VAL = 0
+data[toupper(data$CROPDMGEXP) == "H",]$CROPDMG_VAL = data[toupper(data$CROPDMGEXP) == "H",]$CROPDMG * 100
+data[toupper(data$CROPDMGEXP) == "K",]$CROPDMG_VAL = data[toupper(data$CROPDMGEXP) == "K",]$CROPDMG * 1000
+data[toupper(data$CROPDMGEXP) == "M",]$CROPDMG_VAL = data[toupper(data$CROPDMGEXP) == "M",]$CROPDMG * 1000000
+data[toupper(data$CROPDMGEXP) == "B",]$CROPDMG_VAL = data[toupper(data$CROPDMGEXP) == "B",]$CROPDMG * 1000000000
+
+data$TOTAL_DMG = data$PROPDMG_VAL + data$CROPDMG_VAL
+
+head(data[,c("EVTYPE", "TOTAL_DMG")])
+
 ```
 
 # Results
