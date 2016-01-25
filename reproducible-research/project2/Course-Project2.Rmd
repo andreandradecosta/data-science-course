@@ -28,6 +28,7 @@ For this study the following  R packages are used:
 library(dplyr)
 library(ggplot2)
 library(stringdist)
+library(reshape2)
 ```
 
 
@@ -124,7 +125,28 @@ head(data[,c("EVTYPE", "TOTAL_DMG")])
 
 You can also embed plots, for example:
 
-```{r plot, echo=FALSE}
+```{r}
+
+byHealth <- data %>%
+    group_by(EVENTCLASS) %>%
+    summarise(COUNT_INJ = sum(INJURIES), COUNT_FAT = sum(FATALITIES)) %>%
+    arrange(desc(COUNT_INJ + COUNT_FAT)) %>%
+    top_n(10)
+    
+
+head(byHealth, 20)
+    
+byHealth_long <- melt(byHealth)
+
+print.data.frame(byHealth_long)
+```
+
+
+```{r}
+
+ggplot(byHealth_long, aes(x=reorder(EVENTCLASS, -value), y = value, fill=variable)) +
+    geom_bar(stat="identity") + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
