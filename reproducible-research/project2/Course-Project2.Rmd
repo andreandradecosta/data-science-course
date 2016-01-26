@@ -35,7 +35,7 @@ library(reshape2)
 
 ### Reading the data
 
-
+In this section, the compacted file is downloaded and extracted and its content is read into a data frame.
 
 ```{r read, cache=TRUE}
 if (!dir.exists("data")) {
@@ -48,18 +48,22 @@ data <- read.csv(bzfile("data/rawdata.csv.bz2"))
 ```
 
 
-Size of data:
+* Size of the data:
 ```{r, cache=TRUE}
 dim(data)
 ```
 
+The data is almost a hundred million records with 37 variables. But in this study we are interested only on the kind of the event, how many causalities (injuries and fatalities) and how much as the damage (property and crop). 
 
-Distinct event types in data set:
+One major problem with this data set is that the events are not properly categorized.
+
+* Distinct event types in the data set:
 ```{r, cache=TRUE}
 length(unique(data$EVTYPE))
 ```
 
-Top 50 events:
+
+* Top 50 events:
 ```{r, cache=TRUE}
 byEvents <- data %>%
     group_by(EVTYPE) %>%
@@ -68,16 +72,15 @@ byEvents <- data %>%
 head(as.data.frame(byEvents), 50)
 ```
 
+In the data documentation, is stated that there is only 48 known events. Here we manually list all known events and included the "OTHER" kind of event for the cases where we could not classify the event.
 
-Official events:
+* Official events:
 ```{r, cache=TRUE}
-events <- toupper(as.character(read.csv("event_types.txt", header = F)[,]))
-events <- c(events, "OTHER")
-print(events)
+events <- c("ASTRONOMICAL LOW TIDE", "AVALANCHE", "BLIZZARD", "COASTAL FLOOD", "COLD/WIND CHILL", "DEBRIS FLOW", "DENSE FOG", "DENSE SMOKE", "DROUGHT", "DUST DEVIL", "DUST STORM", "EXCESSIVE HEAT", "EXTREME COLD/WIND CHILL", "FLASH FLOOD", "FLOOD", "FREEZING FOG", "FROST/FREEZE", "FUNNEL CLOUD", "HAIL", "HEAT", "HEAVY RAIN", "HEAVY SNOW", "HIGH SURF", "HIGH WIND", "HURRICANE/TYPHOON", "ICE STORM", "LAKESHORE FLOOD", "LAKE-EFFECT SNOW", "LIGHTNING", "MARINE HAIL", "MARINE HIGH WIND", "MARINE STRONG WIND", "MARINE THUNDERSTORM WIND", "RIP CURRENT", "SEICHE", "SLEET", "STORM TIDE", "STRONG WIND", "THUNDERSTORM WIND", "TORNADO", "TROPICAL DEPRESSION", "TROPICAL STORM", "TSUNAMI", "VOLCANIC ASH", "WATERSPOUT", "WILDFIRE", "WINTER STORM", "WINTER WEATHER", "OTHER")
 ```
 
 
-Classify events:
+To clean up the events, first we substitute the acronym "TSTM" for "THUNDERSTORM" because in some events this acronym is used. Then we use the "stringdist" package so we could classify the events based on the similarity with the official events. Example: THUNDERSTORM WINDS -> THUNDERSTORM WIND:
 ```{r, cache=TRUE}
 
 data <- data %>% 
@@ -87,8 +90,7 @@ data <- data %>%
 ```
 
 
-Events after classification:
-
+* Events after classification:
 ```{r, cache=TRUE}
 byEvents <- data %>%
     group_by(EVENTCLASS) %>%
@@ -97,7 +99,7 @@ byEvents <- data %>%
 print.data.frame(byEvents)
 ```
 
-Calculate damages
+According to the docs, the damage is recorded with the variables \___DMG and \___DMGEXP. So we created another variable that is the multiplication of the value with its order of magnitude:
 ```{r, cache=TRUE}
 
 data$PROPDMG_VAL = 0
@@ -114,13 +116,12 @@ data[toupper(data$CROPDMGEXP) == "B",]$CROPDMG_VAL = data[toupper(data$CROPDMGEX
 
 ```
 
+
 # Results
 
+In this section we will analyse the health and economy impact of the just top 10 events.
 
-
-
-You can also embed plots, for example:
-
+First we select the top 10 events based on injuries and fatalities.
 ```{r, cache=TRUE}
 
 byHealth <- data %>%
@@ -132,13 +133,13 @@ byHealth <- data %>%
     
 
 print.data.frame(byHealth)
-    
-byHealth_long <- melt(byHealth, id.vars=c("EVENTCLASS"), measure.vars=c("Total_Injures", "Total_Fatalities"))
 
 ```
 
+As we can see on the plot, tornadoes are by far the most dangerous kind of event. 
 
 ```{r}
+byHealth_long <- melt(byHealth, id.vars=c("EVENTCLASS"), measure.vars=c("Total_Injures", "Total_Fatalities"))
 
 ggplot(byHealth_long, aes(x=reorder(EVENTCLASS, -value), y = value, fill=variable)) +
     geom_bar(stat="identity") + 
@@ -146,6 +147,8 @@ ggplot(byHealth_long, aes(x=reorder(EVENTCLASS, -value), y = value, fill=variabl
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+
+Now we select the top 10 events based on property and crop damages.
 
 ```{r, cache=TRUE}
 
@@ -159,12 +162,13 @@ byDamage <- data %>%
 
 print.data.frame(byDamage)
     
-byDamage_long <- melt(byDamage, id.vars=c("EVENTCLASS"), measure.vars=c("Total_Property_Damage", "Total_Crop_Damage"))
-
 ```
 
+Based on the plot, floods has the biggest impact on economy damages. 
 
 ```{r}
+
+byDamage_long <- melt(byDamage, id.vars=c("EVENTCLASS"), measure.vars=c("Total_Property_Damage", "Total_Crop_Damage"))
 
 ggplot(byDamage_long, aes(x=reorder(EVENTCLASS, -value), y = value, fill=variable)) +
     geom_bar(stat="identity") + 
