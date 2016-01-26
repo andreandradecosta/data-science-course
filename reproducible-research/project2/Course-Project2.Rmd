@@ -49,18 +49,18 @@ data <- read.csv(bzfile("data/rawdata.csv.bz2"))
 
 
 Size of data:
-```{r}
+```{r, cache=TRUE}
 dim(data)
 ```
 
 
 Distinct event types in data set:
-```{r}
+```{r, cache=TRUE}
 length(unique(data$EVTYPE))
 ```
 
 Top 50 events:
-```{r}
+```{r, cache=TRUE}
 byEvents <- data %>%
     group_by(EVTYPE) %>%
     summarise(count = n()) %>%
@@ -70,7 +70,7 @@ head(as.data.frame(byEvents), 50)
 
 
 Official events:
-```{r}
+```{r, cache=TRUE}
 events <- toupper(as.character(read.csv("event_types.txt", header = F)[,]))
 events <- c(events, "OTHER")
 print(events)
@@ -78,7 +78,7 @@ print(events)
 
 
 Classify events:
-```{r}
+```{r, cache=TRUE}
 
 data <- data %>% 
     mutate(EVTYPE = gsub("TSTM", "THUNDERSTORM", toupper(EVTYPE)),
@@ -89,16 +89,16 @@ data <- data %>%
 
 Events after classification:
 
-```{r}
+```{r, cache=TRUE}
 byEvents <- data %>%
     group_by(EVENTCLASS) %>%
     summarise(count = n()) %>%
     arrange(desc(count))
-as.data.frame(byEvents)
+print.data.frame(byEvents)
 ```
 
 Calculate damages
-```{r}
+```{r, cache=TRUE}
 
 data$PROPDMG_VAL = 0
 data[toupper(data$PROPDMGEXP) == "H",]$PROPDMG_VAL = data[toupper(data$PROPDMGEXP) == "H",]$PROPDMG * 100
@@ -112,10 +112,6 @@ data[toupper(data$CROPDMGEXP) == "K",]$CROPDMG_VAL = data[toupper(data$CROPDMGEX
 data[toupper(data$CROPDMGEXP) == "M",]$CROPDMG_VAL = data[toupper(data$CROPDMGEXP) == "M",]$CROPDMG * 1000000
 data[toupper(data$CROPDMGEXP) == "B",]$CROPDMG_VAL = data[toupper(data$CROPDMGEXP) == "B",]$CROPDMG * 1000000000
 
-data$TOTAL_DMG = data$PROPDMG_VAL + data$CROPDMG_VAL
-
-head(data[,c("EVTYPE", "TOTAL_DMG")])
-
 ```
 
 # Results
@@ -125,20 +121,20 @@ head(data[,c("EVTYPE", "TOTAL_DMG")])
 
 You can also embed plots, for example:
 
-```{r}
+```{r, cache=TRUE}
 
 byHealth <- data %>%
     group_by(EVENTCLASS) %>%
-    summarise(COUNT_INJ = sum(INJURIES), COUNT_FAT = sum(FATALITIES)) %>%
-    arrange(desc(COUNT_INJ + COUNT_FAT)) %>%
-    top_n(10)
+    summarise(Total_Injures = sum(INJURIES), Total_Fatalities = sum(FATALITIES)) %>%
+    mutate(Total_Health = Total_Injures + Total_Fatalities) %>%
+    arrange(desc(Total_Health)) %>%
+    top_n(10, Total_Health)
     
 
-head(byHealth, 20)
+print.data.frame(byHealth)
     
-byHealth_long <- melt(byHealth)
+byHealth_long <- melt(byHealth, id.vars=c("EVENTCLASS"), measure.vars=c("Total_Injures", "Total_Fatalities"))
 
-print.data.frame(byHealth_long)
 ```
 
 
@@ -146,7 +142,33 @@ print.data.frame(byHealth_long)
 
 ggplot(byHealth_long, aes(x=reorder(EVENTCLASS, -value), y = value, fill=variable)) +
     geom_bar(stat="identity") + 
+    labs(y = "Count of events", x = "Events", title = "Health Impact") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
+```{r, cache=TRUE}
+
+byDamage <- data %>%
+    group_by(EVENTCLASS) %>%
+    summarise(Total_Property_Damage = sum(PROPDMG_VAL), Total_Crop_Damage = sum(CROPDMG_VAL)) %>%
+    mutate(Total_Damage = Total_Property_Damage + Total_Crop_Damage) %>%
+    arrange(desc(Total_Damage)) %>%
+    top_n(10, Total_Damage)
+    
+
+print.data.frame(byDamage)
+    
+byDamage_long <- melt(byDamage, id.vars=c("EVENTCLASS"), measure.vars=c("Total_Property_Damage", "Total_Crop_Damage"))
+
+```
+
+
+```{r}
+
+ggplot(byDamage_long, aes(x=reorder(EVENTCLASS, -value), y = value, fill=variable)) +
+    geom_bar(stat="identity") + 
+    labs(y = "US$", x = "Events", title = "Economy Impact") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
